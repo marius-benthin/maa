@@ -1,0 +1,6 @@
+SQLAlchemy==1.4.35  # https://github.com/tiangolo/sqlmodel/pull/371
+pandas==1.5.1
+sqlmodel==0.0.8
+mysqlclient==2.1.1
+pydantic==1.10.2
+python-dotenv==0.21.0
