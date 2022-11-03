@@ -1,0 +1,41 @@
+version: '3.1'
+
+services:
+
+  # MongoDB server
+  mongo:
+    image: mongo
+    restart: unless-stopped
+    volumes:
+      - ${MONGODB_STORAGE}:/data/db
+    networks:
+      - backend
+    ports:
+      - "27017:27017"
+
+  # REST-API interface for BinAuthor
+  bin-author-api:
+    image: bin-author-api
+    restart: unless-stopped
+    environment:
+      UPLOAD_DIR: ${UPLOAD_DIR}
+      MONGODB_URI: ${MONGODB_URI}
+      MONGODB_DATABASE: ${MONGODB_DATABASE}
+      BIN_AUTHOR_PATH: ${BIN_AUTHOR_PATH}
+      IDA_PATH: ${IDA_PATH}
+      IDA_HOME: ${IDA_HOME}
+      IDA_LICENSE_SERVER: ${IDA_LICENSE_SERVER}
+    volumes:
+      - ${UPLOAD_DIR_HOST}:${UPLOAD_DIR}
+    networks:
+      - frontend
+      - backend
+    ports:
+      - ${API_PORT}:80
+
+networks:
+  backend:
+    external: false
+  frontend:
+    external: true
+    driver: host
