@@ -1,0 +1,18 @@
+version: '3.1'
+
+services:
+
+  # REST-API interface for BDA
+  bda-api:
+    image: bda-api
+    restart: unless-stopped
+    environment:
+      SAMPLES: ${SAMPLES}
+      BIN_AUTHOR_API: ${BIN_AUTHOR_API}
+      IDADIR: ${IDADIR}
+      IDAUSR: ${IDAUSR}
+      HEXRAYS_LICENSE_FILE: ${HEXRAYS_LICENSE_FILE}
+    volumes:
+      - ${SAMPLES_HOST}:${SAMPLES}
+    ports:
+      - ${API_PORT}:80
