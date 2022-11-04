@@ -12,6 +12,8 @@ class Config(BaseSettings):
     database_url: str
     dataset_file: str = "2021-jan-aptclass_dataset.csv"
     alias_aware: bool = False
+    n_splits: int = 8
+    random_state: int = 42
 
     class Config:
         env_file = ".env"
@@ -77,6 +79,7 @@ class Sample(SQLModel, table=True):
     file_type_id: Optional[int] = Field(default=None, foreign_key="filetype.id")
     file_type: Optional[FileType] = Relationship(back_populates="samples")
     reports: List[Report] = Relationship(back_populates="samples", link_model=ReportSampleLink)
+    fold_id: Optional[int] = Field(default=None, nullable=True)
 
     @validator('sha256', pre=True, always=True)
     def normalize_sha256(cls, v):

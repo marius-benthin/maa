@@ -2,6 +2,8 @@ from json import load
 from typing import List
 from pandas import read_csv
 from ast import literal_eval
+from collections import Counter
+from sklearn.model_selection import StratifiedKFold
 from sqlmodel import SQLModel, Session, create_engine
 from models import Config, Sample, Actor, Report, Country, FileType
 
@@ -45,6 +47,9 @@ with open(config.dataset_file, mode='r', encoding='utf-8') as f:
 
     # local cache with committed database objects
     countries, actors, file_types, reports = {}, {}, {}, {}
+
+    # store inputs and outputs for splitting into folds
+    X, y = [], []
 
     # parse rows and create SQL models
     with Session(sql_engine) as session:
@@ -122,3 +127,29 @@ with open(config.dataset_file, mode='r', encoding='utf-8') as f:
             sample.file_type = file_type
             session.add(sample)
             session.commit()
+            session.refresh(sample)
+
+            X.append(sample)
+            y.append(sample.actor_id)
+
+# split dataset into folds
+skf = StratifiedKFold(n_splits=config.n_splits, shuffle=True, random_state=config.random_state)
+
+# ensure that number of samples per group is not less than k fold splits
+for actor_id, n in Counter(y).items():
+    if n < config.n_splits:
+        for i, _y in enumerate(y):
+            if _y == actor_id:
+                del X[i]
+                del y[i]
+
+fold_id: int = 1
+for train, test in skf.split(X, y):
+    # set fold ID of each sample
+    for sample_id in test:
+        sample = X[sample_id]
+        sample.fold_id = fold_id
+        session.add(sample)
+    fold_id += 1
+
+session.commit()

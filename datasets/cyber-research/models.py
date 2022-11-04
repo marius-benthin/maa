@@ -11,6 +11,8 @@ __author__ = "Marius Benthin"
 class Config(BaseSettings):
     database_url: str
     dataset_file: str = "overview.csv"
+    n_splits: int = 8
+    random_state: int = 42
 
     class Config:
         env_file = ".env"
@@ -53,6 +55,7 @@ class Sample(SQLModel, table=True):
     actor: Optional[Actor] = Relationship(back_populates="samples")
     report_id: Optional[int] = Field(default=None, foreign_key="report.id")
     report: Optional[Report] = Relationship(back_populates="samples")
+    fold_id: Optional[int] = Field(default=None, nullable=True)
 
     @validator('sha256', pre=True, always=True)
     def normalize_sha256(cls, v):
