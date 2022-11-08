@@ -125,6 +125,7 @@ with open(config.dataset_file, mode='r', encoding='utf-8') as f:
             sample.actor = actor
             sample.reports = report_collection
             sample.file_type = file_type
+            sample.children = []
             session.add(sample)
             session.commit()
             session.refresh(sample)

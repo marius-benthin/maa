@@ -69,6 +69,17 @@ class Report(SQLModel, table=True):
         return v.upper()
 
 
+class SampleChildrenLink(SQLModel, table=True):
+    sample_id: Optional[int] = Field(default=None, foreign_key="sample.id", primary_key=True)
+    child_id: Optional[int] = Field(default=None, foreign_key="child.id", primary_key=True)
+
+
+class Child(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    sha256: str = Field(sa_column=Column("sha256", VARCHAR(64), unique=True))
+    samples: List["Sample"] = Relationship(back_populates="children", link_model=SampleChildrenLink)
+
+
 class Sample(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     md5: str = Field(alias='vt_md5')
@@ -80,6 +91,7 @@ class Sample(SQLModel, table=True):
     file_type: Optional[FileType] = Relationship(back_populates="samples")
     reports: List[Report] = Relationship(back_populates="samples", link_model=ReportSampleLink)
     fold_id: Optional[int] = Field(default=None, nullable=True)
+    children: List[Child] = Relationship(back_populates="samples", link_model=SampleChildrenLink)
 
     @validator('sha256', pre=True, always=True)
     def normalize_sha256(cls, v):

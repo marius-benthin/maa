@@ -66,6 +66,7 @@ with open(config.dataset_file, mode='r', encoding='utf-8') as f:
             sample: Sample = Sample.from_orm(df_tuple)
             sample.actor = actor
             sample.report = report
+            sample.children = []
             session.add(sample)
             session.commit()
             session.refresh(sample)
