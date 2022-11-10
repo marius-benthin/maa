@@ -40,6 +40,16 @@ class Actor(SQLModel, table=True):
         return re.sub(r'[^\dA-Z]+', '_', v.upper()).replace('APT_', 'APT')
 
 
+class FileType(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(alias='Filetype')
+    samples: List["Sample"] = Relationship(back_populates="file_type")
+
+    @validator('name', pre=True, always=True)
+    def normalize_file_type(cls, v):
+        return re.sub(r'[^\dA-Z]+', '_', v.upper())
+
+
 class Report(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     url: str = Field(alias='Source')
@@ -64,6 +74,8 @@ class Sample(SQLModel, table=True):
     sha256: str = Field(alias='SHA256', sa_column=Column("sha256", VARCHAR(64), unique=True))
     actor_id: Optional[int] = Field(default=None, foreign_key="actor.id")
     actor: Optional[Actor] = Relationship(back_populates="samples")
+    file_type_id: Optional[int] = Field(default=None, foreign_key="filetype.id")
+    file_type: Optional[FileType] = Relationship(back_populates="samples")
     report_id: Optional[int] = Field(default=None, foreign_key="report.id")
     report: Optional[Report] = Relationship(back_populates="samples")
     fold_id: Optional[int] = Field(default=None, nullable=True)

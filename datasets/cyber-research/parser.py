@@ -2,7 +2,7 @@ from pandas import read_csv
 from collections import Counter
 from sklearn.model_selection import StratifiedKFold
 from sqlmodel import SQLModel, Session, create_engine
-from models import Config, Sample, Actor, Report, Country
+from models import Config, Sample, Actor, Report, Country, FileType
 
 __author__ = "Marius Benthin"
 
@@ -20,6 +20,9 @@ with open(config.dataset_file, mode='r', encoding='utf-8') as f:
     # apply filters as proposed by the authors
     df = read_csv(f, sep=',')
     df = df[~df['Status'].str.contains('X')]
+
+    # apply additional filter for filetypes
+    df = df[df['Filetype'].isin(['Win16 EXE', 'Win32 EXE', 'Win32 DLL', 'Windows Installer', 'DOS EXE'])]
 
     # local cache with committed database objects
     countries, actors, file_types, reports = {}, {}, {}, {}
@@ -52,6 +55,16 @@ with open(config.dataset_file, mode='r', encoding='utf-8') as f:
             else:
                 actor = actors[actor.name]
 
+            # parse and validate file type
+            file_type: FileType = FileType.from_orm(df_tuple)
+            if file_type.name not in file_types.keys():
+                session.add(file_type)
+                session.commit()
+                session.refresh(file_type)
+                file_types[file_type.name] = file_type
+            else:
+                file_type = file_types[file_type.name]
+
             # parse and validate report
             report: Report = Report.from_orm(df_tuple)
             if report.url not in reports.keys():
@@ -66,6 +79,7 @@ with open(config.dataset_file, mode='r', encoding='utf-8') as f:
             sample: Sample = Sample.from_orm(df_tuple)
             sample.actor = actor
             sample.report = report
+            sample.file_type = file_type
             sample.children = []
             session.add(sample)
             session.commit()

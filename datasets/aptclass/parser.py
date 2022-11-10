@@ -45,6 +45,9 @@ with open(config.dataset_file, mode='r', encoding='utf-8') as f:
     df = df[~df['apt_country'].str.contains('China Iran')]
     df = df[~df['apt_country'].str.contains('Russia Ukraine')]
 
+    # apply additional filter for filetypes
+    df = df[df['vt_file_type'].isin(['Win16 EXE', 'Win32 EXE', 'Win32 DLL', 'Windows Installer', 'DOS EXE'])]
+
     # local cache with committed database objects
     countries, actors, file_types, reports = {}, {}, {}, {}
 
