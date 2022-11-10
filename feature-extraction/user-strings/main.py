@@ -50,7 +50,7 @@ if __name__ == "__main__":
     # decompose user-related strings into n-grams for each sample
     with Session(sql_engine) as session:
         # get all parent samples
-        parents: List[Sample] = session.exec(select(Sample).order_by(Sample.id)).all()
+        parents: List[Sample] = session.exec(select(Sample).where(Sample.fold_id != None).order_by(Sample.id)).all()
         for parent in parents:
             # if sample is not packed or has no children
             if len(parent.children) == 0:
