@@ -43,7 +43,9 @@ The proposed malware authorship attribution pipeline is composed of four compone
 ### 1) Dataset Preparation
 
 This component prepares the dataset by transforming the information about samples, APT groups, countries and aliases into a relational database using [SQLModel](https://sqlmodel.tiangolo.com/).
-A parser for both datasets can be found in the `datasets` folder. However, you must first request access to the APTClass CSV file `2021-jan-aptclass_dataset.csv` granted by Gray et al. before I am allowed to give you access to the corrected dataset `2022-aug-aptclass_dataset.csv`. 
+A parser for both datasets can be found in the `datasets` folder which filters out samples not complying with the MAA assumptions (e.g. file types or multiple actors) and splits the dataset into eight folds.
+However, you must first request access to the APTClass CSV file `2021-jan-aptclass_dataset.csv` granted by Gray et al. before I am allowed to give you access to the corrected dataset `2022-aug-aptclass_dataset.csv`.
+Furthermore, the cyber-research dataset by default does not include the file types in `overview.csv`, so keep a look at my forked repository [marius-benthin/cyber-research](https://github.com/marius-benthin/APTMalware).
 
 ![UML Diagram](resources/database.png)
 
