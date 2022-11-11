@@ -57,20 +57,8 @@ if __name__ == "__main__":
                 vector: Tuple[ndarray, ndarray] = decompose_n_grams(sha256=parent.sha256)
                 features: Dict[str, int] = {}
                 i: int = 0
-                for n_gram in vector[1]:
-                    n_grams.add(n_gram)
-                    if n_gram not in features.keys():
-                        features[n_gram] = 0
-                    for string in vector[0]:
-                        features[n_gram] += string[i]
-                    i += 1
-                sample_ids.append((parent.id, None,))
-                samples.append(features)
-            else:
-                for child in parent.children:
-                    vector: Tuple[ndarray, ndarray] = decompose_n_grams(sha256=child.sha256)
-                    features: Dict[str, int] = {}
-                    i: int = 0
+                # NEW -> prevent fallback groups if no features are present
+                if len(features) > 0:
                     for n_gram in vector[1]:
                         n_grams.add(n_gram)
                         if n_gram not in features.keys():
@@ -78,8 +66,24 @@ if __name__ == "__main__":
                         for string in vector[0]:
                             features[n_gram] += string[i]
                         i += 1
-                    sample_ids.append((parent.id, child.id,))
+                    sample_ids.append((parent.id, None,))
                     samples.append(features)
+            else:
+                for child in parent.children:
+                    vector: Tuple[ndarray, ndarray] = decompose_n_grams(sha256=child.sha256)
+                    features: Dict[str, int] = {}
+                    # NEW -> prevent fallback groups if no features are present
+                    if len(features) > 0:
+                        i: int = 0
+                        for n_gram in vector[1]:
+                            n_grams.add(n_gram)
+                            if n_gram not in features.keys():
+                                features[n_gram] = 0
+                            for string in vector[0]:
+                                features[n_gram] += string[i]
+                            i += 1
+                        sample_ids.append((parent.id, child.id,))
+                        samples.append(features)
 
     # map user-related string n-gram frequencies into numpy feature vector
     n_grams: List = list(n_grams)

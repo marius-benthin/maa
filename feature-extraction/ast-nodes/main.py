@@ -54,13 +54,17 @@ if __name__ == "__main__":
             # if sample is not packed or has no children
             if len(parent.children) == 0:
                 features: Dict[str, int] = parse_ast(sha256=parent.sha256)
-                sample_ids.append((parent.id, None,))
-                samples.append(features)
+                # NEW -> prevent fallback groups if no features are present
+                if len(features) > 0:
+                    sample_ids.append((parent.id, None,))
+                    samples.append(features)
             else:
                 for child in parent.children:
                     features: Dict[str, int] = parse_ast(sha256=child.sha256)
-                    sample_ids.append((parent.id, child.id,))
-                    samples.append(features)
+                    # NEW -> prevent fallback groups if no features are present
+                    if len(features) > 0:
+                        sample_ids.append((parent.id, child.id,))
+                        samples.append(features)
 
     # map AST node frequencies into numpy feature vector
     ast_types: List = list(ast_types)
