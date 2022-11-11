@@ -16,7 +16,7 @@ APTClass is an annotated meta-dataset for MAA published by Gray et al.
 The ground truth is based on threat intelligence reports published by government departments, anti-virus and security companies.
 
 - Paper: [Identifying Authorship Style in Malicious Binaries: Techniques, Challenges & Datasets](https://s2lab.cs.ucl.ac.uk/downloads/aptclass.pdf)
-- Dataset: [Bitbucket](https://bitbucket.org/jason_rhul/aptclass_dataset) (11,804 samples by 82 APT groups)
+- Dataset: [Bitbucket](https://bitbucket.org/jason_rhul/aptclass_dataset) (15,660 samples by 164 APT groups according to paper)
 
 Some incorrect assignments were found in the dataset, which were forwarded to the authors and described in the thesis.
 The applied corrections were comprehensibly committed to a dedicated Bitbucket repository and should soon be adopted by the authors.
@@ -27,7 +27,7 @@ The ground truth is based on threat intelligence reports published by security v
 
 
 - Paper: [Applying Supervised Learning on Malware Authorship Attribution](https://www.ru.nl/publish/pages/769526/b_coen_boot.pdf)
-- Dataset: [GitHub](https://github.com/cyber-research/APTMalware) (3,584 samples by 12 APT groups)
+- Dataset: [GitHub](https://github.com/cyber-research/APTMalware) (3,594 samples by 12 APT groups according to paper)
 
 Similar to APTClass, a few mistakes were noticed, which are shown in the pull request in a comprehensible way:
 [https://github.com/cyber-research/APTMalware/pull/2](https://github.com/cyber-research/APTMalware/pull/2)
@@ -47,7 +47,9 @@ A parser for both datasets can be found in the `datasets` folder which filters o
 However, you must first request access to the APTClass CSV file `2021-jan-aptclass_dataset.csv` granted by Gray et al. before I am allowed to give you access to the corrected dataset `2022-aug-aptclass_dataset.csv`.
 Furthermore, the cyber-research dataset by default does not include the file types in `overview.csv`, so keep a look at my forked repository [marius-benthin/cyber-research](https://github.com/marius-benthin/APTMalware).
 
-![UML Diagram](resources/database.png)
+#### Numbers after Dataset Filtration
+- **APTClass**: 11,787 portable executables by 82 APT groups
+- **cyber-research**: 2,867 portable executables by 12 APT groups
 
 It is assumed that the samples and extracted artifacts are stored in the following folder structure indexed by SHA-256.
 
