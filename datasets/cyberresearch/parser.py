@@ -2,7 +2,9 @@ from pandas import read_csv
 from collections import Counter
 from sklearn.model_selection import StratifiedKFold
 from sqlmodel import SQLModel, Session, create_engine
-from models import Config, Sample, Actor, Report, Country, FileType
+
+from models.config import Config
+from cyberresearch_models import Sample, Actor, Report, Country, FileType
 
 __author__ = "Marius Benthin"
 
@@ -15,7 +17,7 @@ sql_engine = create_engine(config.database_url)
 SQLModel.metadata.create_all(sql_engine)
 
 # read dataset csv file
-with open(config.dataset_file, mode='r', encoding='utf-8') as f:
+with open(config.cyberresearch_csv, mode='r', encoding='utf-8') as f:
 
     # apply filters as proposed by the authors
     df = read_csv(f, sep=',')

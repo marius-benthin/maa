@@ -1,21 +1,11 @@
 import re
+from pydantic import validator
 from typing import List, Optional
 from sqlalchemy import Column, VARCHAR
-from pydantic import validator, BaseSettings
 from sqlmodel import SQLModel, Field, Relationship
 
 
 __author__ = "Marius Benthin"
-
-
-class Config(BaseSettings):
-    database_url: str
-    dataset_file: str = "overview.csv"
-    n_splits: int = 8
-    random_state: int = 42
-
-    class Config:
-        env_file = ".env"
 
 
 class Country(SQLModel, table=True):

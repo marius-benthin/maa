@@ -5,7 +5,9 @@ from ast import literal_eval
 from collections import Counter
 from sklearn.model_selection import StratifiedKFold
 from sqlmodel import SQLModel, Session, create_engine
-from models import Config, Sample, Actor, Report, Country, FileType
+
+from models.config import Config
+from aptclass_models import Sample, Actor, Report, Country, FileType
 
 
 __author__ = "Marius Benthin"
@@ -18,6 +20,7 @@ config = Config()
 sql_engine = create_engine(config.database_url)
 SQLModel.metadata.create_all(sql_engine)
 
+
 actor_aliases = {}
 if config.alias_aware:
     # dictionary with aliases as key and group name as value
@@ -25,7 +28,7 @@ if config.alias_aware:
         actor_aliases = load(f)
 
 # read dataset csv file
-with open(config.dataset_file, mode='r', encoding='utf-8') as f:
+with open(config.aptclass_csv, mode='r', encoding='utf-8') as f:
 
     # apply filters as proposed by the authors
     df = read_csv(f, sep='|')
