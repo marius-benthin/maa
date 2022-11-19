@@ -19,7 +19,9 @@ The ground truth is based on threat intelligence reports published by government
 - Dataset: [Bitbucket](https://bitbucket.org/jason_rhul/aptclass_dataset) (15,660 samples by 164 APT groups according to paper)
 
 Some incorrect assignments were found in the dataset, which were forwarded to the authors and described in the thesis.
-The applied corrections were comprehensibly committed to a dedicated Bitbucket repository and should soon be adopted by the authors.
+The applied corrections were comprehensibly committed to a dedicated Bitbucket repository.
+The authors of APTClass adapted the majority of corrections into the original dataset with some minor exceptions.
+
 
 ### cyber-research
 cyber-research is an annotated dataset including all referenced samples for MAA published by Coen Boot.
@@ -34,6 +36,30 @@ Similar to APTClass, a few mistakes were noticed, which are shown in the pull re
 
 ---
 
+## Configuration
+
+All configurable variables are stored in an environment file `.env` on the top level in the project directory, which contains connection information, hyper-parameters and local paths.
+An overview of the environment variables can be taken from the configuration file `models/config.py`.
+Default values were assigned to the majority of variables, which were used in the final MAA pipeline described the master thesis. 
+However, the subsequent ones must be defined by yourself.
+
+```
+SAMPLE_FOLDER=/samples
+DATABASE_URL="mysql://username:password@localhost:3306/aptclass?charset=utf8mb4"
+MONGODB_URL="mongodb://localhost:27017/"
+
+APTCLASS_CSV=/home/user/aptclass/2022-aug-aptclass_dataset.csv
+CYBERRESEARCH_CSV=/home/user/cyberresearch/overview.csv
+
+NUMPY_FILE_MODEL_A=/home/user/model_A_feature_vector_aptclass.npz
+NUMPY_FILE_MODEL_B=/home/user/model_B_feature_vector_aptclass.npz
+NUMPY_FILE_MODEL_C=/home/user/model_C_feature_vector_aptclass.npz
+```
+
+Since the environment file is used by all Python modules of this MAA pipeline, the **working directory** has to be **equal** to the **project directory**. 
+
+--- 
+
 ## MAA Pipeline
 
 The proposed malware authorship attribution pipeline is composed of four components, illustrated in the figure below.
@@ -44,7 +70,7 @@ The proposed malware authorship attribution pipeline is composed of four compone
 
 This component prepares the dataset by transforming the information about samples, APT groups, countries and aliases into a relational database using [SQLModel](https://sqlmodel.tiangolo.com/).
 A parser for both datasets can be found in the `datasets` folder which filters out samples not complying with the MAA assumptions (e.g. file types or multiple actors) and splits the dataset into eight folds.
-However, you must first request access to the APTClass CSV file `2021-jan-aptclass_dataset.csv` granted by Gray et al. before I am allowed to give you access to the corrected dataset `2022-aug-aptclass_dataset.csv`.
+However, you must first request access to the APTClass original and updated CSV files `2021-jan-aptclass_dataset.csv` and `2022-nov-aptclass_dataset.csv` granted by Gray et al. before I am allowed to give you access to the corrected dataset `2022-aug-aptclass_dataset.csv`.
 Furthermore, the cyber-research dataset by default does not include the file types in `overview.csv`, so keep a look at my forked repository [marius-benthin/cyber-research](https://github.com/marius-benthin/APTMalware).
 
 #### Numbers after Dataset Filtration
