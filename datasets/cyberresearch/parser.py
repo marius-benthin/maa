@@ -4,7 +4,8 @@ from sklearn.model_selection import StratifiedKFold
 from sqlmodel import SQLModel, Session, create_engine
 
 from models.config import Config
-from cyberresearch_models import Sample, Actor, Report, Country, FileType
+from cyberresearch_models import Sample, Group, Report, Country, FileType
+
 
 __author__ = "Marius Benthin"
 
@@ -27,7 +28,7 @@ with open(config.cyberresearch_csv, mode='r', encoding='utf-8') as f:
     df = df[df['Filetype'].isin(['Win16 EXE', 'Win32 EXE', 'Win32 DLL', 'Windows Installer', 'DOS EXE'])]
 
     # local cache with committed database objects
-    countries, actors, file_types, reports = {}, {}, {}, {}
+    countries, groups, file_types, reports = {}, {}, {}, {}
 
     # store inputs and outputs for splitting into folds
     X, y = [], []
@@ -46,16 +47,16 @@ with open(config.cyberresearch_csv, mode='r', encoding='utf-8') as f:
             else:
                 country = countries[country.name]
 
-            # parse and validate actor
-            actor: Actor = Actor.from_orm(df_tuple)
-            if actor.name not in actors.keys():
-                actor.country = country
-                session.add(actor)
+            # parse and validate group
+            group: Group = Group.from_orm(df_tuple)
+            if group.name not in groups.keys():
+                group.country = country
+                session.add(group)
                 session.commit()
-                session.refresh(actor)
-                actors[actor.name] = actor
+                session.refresh(group)
+                groups[group.name] = group
             else:
-                actor = actors[actor.name]
+                group = groups[group.name]
 
             # parse and validate file type
             file_type: FileType = FileType.from_orm(df_tuple)
@@ -79,7 +80,7 @@ with open(config.cyberresearch_csv, mode='r', encoding='utf-8') as f:
 
             # parse and validate sample and connect with other objects
             sample: Sample = Sample.from_orm(df_tuple)
-            sample.actor = actor
+            sample.group = group
             sample.report = report
             sample.file_type = file_type
             sample.children = []
@@ -88,16 +89,16 @@ with open(config.cyberresearch_csv, mode='r', encoding='utf-8') as f:
             session.refresh(sample)
 
             X.append(sample)
-            y.append(sample.actor_id)
+            y.append(sample.group_id)
 
 # split dataset into folds
 skf = StratifiedKFold(n_splits=config.n_splits, shuffle=True, random_state=config.random_state)
 
 # ensure that number of samples per group is not less than k fold splits
-for actor_id, n in Counter(y).items():
+for group_id, n in Counter(y).items():
     if n < config.n_splits:
         for i, _y in enumerate(y):
-            if _y == actor_id:
+            if _y == group_id:
                 del X[i]
                 del y[i]
 

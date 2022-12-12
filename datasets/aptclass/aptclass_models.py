@@ -8,25 +8,38 @@ from sqlmodel import SQLModel, Field, Relationship
 __author__ = "Marius Benthin"
 
 
-class Country(SQLModel, table=True):
+class Actor(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+
+
+class Country(Actor, table=True):
     name: str = Field(alias='apt_country')
-    actors: List["Actor"] = Relationship(back_populates="country")
+    groups: List["Group"] = Relationship(back_populates="country")
 
     @validator('name', pre=True, always=True)
     def normalize_country_name(cls, v):
         return re.sub(r'[^\dA-Z]+', '_', v.upper())
 
 
-class Actor(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+class Group(Actor, table=True):
     name: str = Field(alias='apt_name')
-    samples: List["Sample"] = Relationship(back_populates="actor")
+    samples: List["Sample"] = Relationship(back_populates="group")
+    aliases: List["Alias"] = Relationship(back_populates="group")
     country_id: Optional[int] = Field(default=None, foreign_key="country.id")
-    country: Optional[Country] = Relationship(back_populates="actors")
+    country: Optional[Country] = Relationship(back_populates="groups")
 
     @validator('name', pre=True, always=True)
-    def normalize_actor_name(cls, v):
+    def normalize_group_name(cls, v):
+        return re.sub(r'[^\dA-Z]+', '_', v.upper())
+
+
+class Alias(Actor, table=True):
+    group_id: Optional[int] = Field(default=None, foreign_key="group.id")
+    group: Optional[Group] = Relationship(back_populates="aliases")
+
+    @validator('name', pre=True, always=True)
+    def normalize_alias_name(cls, v):
         return re.sub(r'[^\dA-Z]+', '_', v.upper())
 
 
@@ -74,8 +87,8 @@ class Sample(SQLModel, table=True):
     md5: str = Field(alias='vt_md5')
     sha1: str = Field(alias='vt_sha1')
     sha256: str = Field(alias='checked_sha256', sa_column=Column("sha256", VARCHAR(64), unique=True))
-    actor_id: Optional[int] = Field(default=None, foreign_key="actor.id")
-    actor: Optional[Actor] = Relationship(back_populates="samples")
+    group_id: Optional[int] = Field(default=None, foreign_key="group.id")
+    group: Optional[Group] = Relationship(back_populates="samples")
     file_type_id: Optional[int] = Field(default=None, foreign_key="filetype.id")
     file_type: Optional[FileType] = Relationship(back_populates="samples")
     reports: List[Report] = Relationship(back_populates="samples", link_model=ReportSampleLink)

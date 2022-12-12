@@ -1,3 +1,4 @@
+import re
 from json import load
 from typing import List
 from pandas import read_csv
@@ -7,7 +8,7 @@ from sklearn.model_selection import StratifiedKFold
 from sqlmodel import SQLModel, Session, create_engine
 
 from models.config import Config
-from aptclass_models import Sample, Actor, Report, Country, FileType
+from aptclass_models import Sample, Group, Alias, Report, Country, FileType
 
 
 __author__ = "Marius Benthin"
@@ -21,11 +22,11 @@ sql_engine = create_engine(config.database_url)
 SQLModel.metadata.create_all(sql_engine)
 
 
-actor_aliases = {}
+group_aliases = {}
 if config.alias_aware:
     # dictionary with aliases as key and group name as value
-    with open('aliases.json', 'r') as f:
-        actor_aliases = load(f)
+    with open(config.alias_json, 'r') as f:
+        group_aliases = load(f)
 
 # read dataset csv file
 with open(config.aptclass_csv, mode='r', encoding='utf-8') as f:
@@ -52,7 +53,7 @@ with open(config.aptclass_csv, mode='r', encoding='utf-8') as f:
     df = df[df['vt_file_type'].isin(['Win16 EXE', 'Win32 EXE', 'Win32 DLL', 'Windows Installer', 'DOS EXE'])]
 
     # local cache with committed database objects
-    countries, actors, file_types, reports = {}, {}, {}, {}
+    countries, groups, file_types, reports = {}, {}, {}, {}
 
     # store inputs and outputs for splitting into folds
     X, y = [], []
@@ -64,20 +65,20 @@ with open(config.aptclass_csv, mode='r', encoding='utf-8') as f:
             if not config.alias_aware:
                 apt_name = df_tuple.apt_name
             else:
-                # parse actor and check for common aliases
-                _actors = []
+                # parse group and check for common aliases
+                _groups = []
                 aliases = df_tuple.apt_name.split(', ')
                 for alias in aliases:
-                    if alias in actor_aliases.keys():
-                        _actors.append(actor_aliases[alias])
+                    if alias in group_aliases.keys():
+                        _groups.append(group_aliases[alias])
                     else:
-                        _actors.append(alias)
+                        _groups.append(alias)
 
                 # skip if aliases belong to different groups
-                if len(set(_actors)) != 1:
+                if len(set(_groups)) != 1:
                     continue
                 else:
-                    apt_name = _actors[0]
+                    apt_name = _groups[0]
 
             # parse and validate country
             country: Country = Country.from_orm(df_tuple)
@@ -89,16 +90,16 @@ with open(config.aptclass_csv, mode='r', encoding='utf-8') as f:
             else:
                 country = countries[country.name]
 
-            # validate actor
-            actor: Actor = Actor(apt_name=apt_name)
-            if actor.name not in actors.keys():
-                actor.country = country
-                session.add(actor)
+            # validate group
+            group: Group = Group(apt_name=apt_name)
+            if group.name not in groups.keys():
+                group.country = country
+                session.add(group)
                 session.commit()
-                session.refresh(actor)
-                actors[actor.name] = actor
+                session.refresh(group)
+                groups[group.name] = group
             else:
-                actor = actors[actor.name]
+                group = groups[group.name]
 
             # parse and validate file type
             file_type: FileType = FileType.from_orm(df_tuple)
@@ -128,7 +129,7 @@ with open(config.aptclass_csv, mode='r', encoding='utf-8') as f:
 
             # parse and validate sample and connect with other objects
             sample: Sample = Sample.from_orm(df_tuple)
-            sample.actor = actor
+            sample.group = group
             sample.reports = report_collection
             sample.file_type = file_type
             sample.children = []
@@ -137,16 +138,24 @@ with open(config.aptclass_csv, mode='r', encoding='utf-8') as f:
             session.refresh(sample)
 
             X.append(sample)
-            y.append(sample.actor_id)
+            y.append(sample.group_id)
+
+        # insert aliases into database
+        for alias_name, group_name in group_aliases.items():
+            alias = Alias(name=alias_name)
+            group_name = re.sub(r'[^\dA-Z]+', '_', group_name.upper())
+            alias.group = groups[group_name]
+            session.add(alias)
+        session.commit()
 
 # split dataset into folds
 skf = StratifiedKFold(n_splits=config.n_splits, shuffle=True, random_state=config.random_state)
 
 # ensure that number of samples per group is not less than k fold splits
-for actor_id, n in Counter(y).items():
+for group_id, n in Counter(y).items():
     if n < config.n_splits:
         for i, _y in enumerate(y):
-            if _y == actor_id:
+            if _y == group_id:
                 del X[i]
                 del y[i]
 
