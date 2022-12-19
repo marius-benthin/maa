@@ -1,9 +1,12 @@
 import logging
 from pathlib import Path
-from typing import Dict, Set, List, Tuple, Optional
 from numpy import ndarray, savez_compressed
+from typing import Dict, Set, List, Tuple, Optional
 from sqlmodel import create_engine, SQLModel, Session, select
-from models import Sample, Config
+
+from models.config import Config
+from models.models import Sample
+
 
 __author__ = "Marius Benthin"
 
@@ -74,4 +77,4 @@ if __name__ == "__main__":
             feature_vector[i][ast_types.index(ast_node)] = frequency
 
     # export numpy feature vector
-    savez_compressed(file=config.numpy_file, X=feature_vector, sample_ids=sample_ids, features=ast_types)
+    savez_compressed(file=config.numpy_file_model_B, X=feature_vector, sample_ids=sample_ids, features=ast_types)

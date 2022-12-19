@@ -1,11 +1,14 @@
 import logging
 import pymongo
-from typing import Dict, Set, List, Tuple, Optional
-from numpy import ndarray, savez_compressed
 from scipy.sparse import csr_matrix
+from numpy import ndarray, savez_compressed
+from typing import Dict, Set, List, Tuple, Optional
 from sklearn.feature_extraction.text import CountVectorizer
 from sqlmodel import create_engine, SQLModel, Session, select
-from models import Sample, Config
+
+from models.config import Config
+from models.models import Sample
+
 
 __author__ = "Marius Benthin"
 
@@ -26,9 +29,11 @@ collection = database.get_collection("Strings")
 def decompose_n_grams(sha256: str) -> Tuple[ndarray, ndarray]:
     document = collection.find_one({"FileSHA256": sha256.lower()})
     # transform string corpus to ngrams
-    cv = CountVectorizer(decode_error='ignore', ngram_range=(config.n_gram, config.n_gram), analyzer='char')
+    ngram_range = (config.n_gram_model_A, config.n_gram_model_A)
+    cv = CountVectorizer(decode_error='ignore', ngram_range=ngram_range, analyzer='char')
     try:
         if document is not None:
+            logging.info(f"Transforming user-related strings of sample {sha256}")
             n_gram_frequencies: csr_matrix = cv.fit_transform(document["Strings"])
             n_gram_vocabulary: ndarray = cv.get_feature_names_out()
             if n_gram_frequencies is not None and n_gram_vocabulary is not None:
@@ -37,7 +42,7 @@ def decompose_n_grams(sha256: str) -> Tuple[ndarray, ndarray]:
             logging.warning(f"Sample {sha256} not found in MongoDB")
     except ValueError as e:
         logging.warning(f"{e} -> {sha256}")
-    return [], []
+    return None
 
 
 if __name__ == "__main__":
@@ -58,7 +63,7 @@ if __name__ == "__main__":
                 features: Dict[str, int] = {}
                 i: int = 0
                 # NEW -> prevent fallback groups if no features are present
-                if len(features) > 0:
+                if vector is not None:
                     for n_gram in vector[1]:
                         n_grams.add(n_gram)
                         if n_gram not in features.keys():
@@ -73,7 +78,7 @@ if __name__ == "__main__":
                     vector: Tuple[ndarray, ndarray] = decompose_n_grams(sha256=child.sha256)
                     features: Dict[str, int] = {}
                     # NEW -> prevent fallback groups if no features are present
-                    if len(features) > 0:
+                    if vector is not None:
                         i: int = 0
                         for n_gram in vector[1]:
                             n_grams.add(n_gram)
@@ -93,4 +98,4 @@ if __name__ == "__main__":
             feature_vector[i][n_grams.index(n_gram)] = frequency
 
     # export numpy feature vector
-    savez_compressed(file=config.numpy_file, X=feature_vector, sample_ids=sample_ids, features=n_grams)
+    savez_compressed(file=config.numpy_file_model_A, X=feature_vector, sample_ids=sample_ids, features=n_grams)
