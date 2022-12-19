@@ -1,4 +1,6 @@
+from pathlib import Path
 from pydantic import BaseSettings, DirectoryPath, MongoDsn, AnyUrl, FilePath
+
 
 __author__ = "Marius Benthin"
 
@@ -11,11 +13,12 @@ class Config(BaseSettings):
     mongodb_url: MongoDsn
 
     # CSV files
-    aptclass_csv: FilePath = "2021-jan-aptclass_dataset.csv"
-    cyberresearch_csv: FilePath = "overview.csv"
+    aptclass_csv: FilePath = Path("datasets", "aptclass", "2022-aug-aptclass_dataset.csv")
+    cyberresearch_csv: FilePath = Path("datasets", "cyberresearch", "overview.csv")
 
     # dataset parsing
-    alias_aware: bool = False
+    alias_aware: bool = True
+    alias_json: FilePath = Path("datasets", "aptclass", "aliases.json")
     n_splits: int = 8
 
     # n-gram feature extraction
