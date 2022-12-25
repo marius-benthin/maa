@@ -1,4 +1,6 @@
 from typing import Optional, List
+
+from pydantic import BaseModel
 from sqlalchemy import Column, VARCHAR
 from sqlmodel import SQLModel, Field, Relationship
 
@@ -68,3 +70,12 @@ class Sample(SQLModel, table=True):
     reports: List[Report] = Relationship(back_populates="samples", link_model=ReportSampleLink)
     fold_id: Optional[int] = Field(default=None, nullable=True)
     children: List[Child] = Relationship(back_populates="samples", link_model=SampleChildrenLink)
+
+
+class EnsembleSample(BaseModel):
+    fold_id: int
+    label: str
+    model_A: bool
+    model_B: bool
+    model_C: bool
+    children: List[Child] = []
